@@ -8,15 +8,6 @@ fastify.register(require("@fastify/postgres"), {
   connectionString: "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
 
-fastify.listen({ port: 3000 }, function (error, address) {
-  if (error) {
-    console.log(error); 
-    process.exit(1);
-  }
-
-  console.log("Servidor rodando em:", address);
-});
-
 fastify.get("/getprojetos", async (req, res) => {
   try {
     const client = await fastify.pg.connect(); 
@@ -29,9 +20,7 @@ fastify.get("/getprojetos", async (req, res) => {
 });
 
 fastify.post("/criaprojeto", async (req, res) => {
-  try {
-    const client = await fastify.pg.connect();
-
+  
     const {
       engenheiro,
       municipio,
@@ -64,7 +53,11 @@ fastify.post("/criaprojeto", async (req, res) => {
       clasula_suspensiva,
       observações
     ];
+  
+  
+    try {
 
+    const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
@@ -74,23 +67,20 @@ fastify.post("/criaprojeto", async (req, res) => {
   }
 });
 
-fastify.put("/editaprojeto", async (req, res) => {
+fastify.put("/projetos/:id", async (req, res) => {
+  const id = req.params.id;
 
-try{
-
-    const client = await fastify.pg.connect();
-
-    const {
-      engenheiro,
-      municipio,
-      objeto,
-      prioridade,
-      inicio,
-      fim,
-      financiamento,
-      vencimento_convenio,
-      clasula_suspensiva,
-      observações,
+     const {
+    engenheiro,
+    municipio,
+    objeto,
+    prioridade,
+    inicio,
+    fim,
+    financiamento,
+    vencimento_convenio,
+    clasula_suspensiva,
+    observações
     } = req.body;
 
     const query = `
@@ -103,12 +93,12 @@ try{
         fim = $7,
         financiamento = $8, 
         vencimento_convenio = $9, 
-        clasula_suspensiva = $10 
-        observações = $11,
-        WHERE id = $1`;
+        clasula_suspensiva = $10,
+        observações = $11
+      WHERE id = $1`;
 
     const values = [
-      Id,
+      id,
       engenheiro,
       municipio,
       objeto,
@@ -121,14 +111,20 @@ try{
       observações
     ];
 
-}catch(error){
+  try {
+    
+    const client = await fastify.pg.connect();
+    await client.query(query, values);
+    client.release();
+
+    res.send({ success: true, message: "Projeto atualizado com sucesso!" });
+
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
 
-
-
-}
-
-})
 
 
 fastify.get("/getservicos", async (req, res) =>{
@@ -146,5 +142,94 @@ fastify.get("/getservicos", async (req, res) =>{
 
 
 })
+
+fastify.post("/criaservico", async(req, res) =>{
+
+    const {
+    id_projeto,
+    servico,
+    status,
+    inicio,
+    fim
+    } = req.body;
+
+    const query = `
+    INSERT INTO serviços (
+    id_projeto, serviço, status, inicio, fim
+    ) VALUES ($1, $2, $3, $4, $5)`;
+
+    const values = [
+    id_projeto,
+    servico,
+    status,
+    inicio,
+    fim
+    ]
+
+    try{
+
+    await client.query(query, values);
+    client.release();
+
+    res.send({ success: true, message: "Olha o banco" });
+    } catch (error) {
+    res.status(500).send(error);
+    }
+
+
+
+})
+
+fastify.put("/servicos/:id/:servico", async(req, res) =>{
+    const id_projeto = req.params.id;
+    const servico  = req.params.servico;
+
+   const {
+    status,
+    inicio,
+    fim
+    } = req.body;
+
+    const query = `
+    UPDATE serviços 
+    id_projeto, serviço, status, inicio, fim
+    WHERE id = $1 AND serviço = $2`;
+
+    const values = [
+    id_projeto,
+    servico,
+    status,
+    inicio,
+    fim
+    ]
+
+    try{
+
+    await client.query(query, values);
+    client.release();
+
+    res.send({ success: true, message: "Olha o banco" });
+    } catch (error) {
+    res.status(500).send(error);
+    }
+
+});
+
+fastify.delete("/servicos/:id/:servico", async(req, res) =>{
+
+
+
+
+
+});
+
+fastify.listen({ port: 3000 }, function (error, address) {
+  if (error) {
+    console.log(error); 
+    process.exit(1);
+  }
+
+  console.log("Servidor rodando em:", address);
+});
 
 
