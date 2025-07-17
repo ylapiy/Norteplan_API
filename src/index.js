@@ -5,7 +5,13 @@ const fastify = Fastify({
 });
 
 
-fastify.register(require("@fastify/multipart"))
+fastify.register(require("@fastify/multipart"),{
+    attachFieldsToBody: false,
+    limits: {
+    fileSize: 10 * 1024 * 1024
+    }
+})
+
 fastify.register(require("@fastify/postgres"), {
   connectionString: "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
@@ -218,10 +224,10 @@ fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
 
 });
 
-fastify.put("/adicionarimagemservicos/:id/:servico", async(req, res) =>{
-    
-    try {
+fastify.put("/adicionarimagemservicos/:id/:servico", async (req, res) => {
+  const client = await fastify.pg.connect();
 
+  try {
     const buffers = [];
 
     for await (const part of req.parts()) {
@@ -231,34 +237,39 @@ fastify.put("/adicionarimagemservicos/:id/:servico", async(req, res) =>{
       }
     }
 
-    const placeholders = [];
-    const values = [id,servico];
+    const colunas = [
+      "imagem1", "imagem2", "imagem3", "imagem4", "imagem5",
+      "imagem6", "imagem7", "imagem8", "imagem9", "imagem10"
+    ];
 
-    for (let i = 0; i < 12; i++) {
-      placeholders.push(`$${i + 1}`);
-      values.push(buffers[i] || null); 
+    const setClauses = [];
+    const values = [];
+
+    for (let i = 0; i < colunas.length; i++) {
+      setClauses.push(`${colunas[i]} = $${i + 1}`);
+      values.push(buffers[i] || null);
     }
 
-    values.push(req.params.id);
-    values.push(req.params.servico);
+    values.push(req.params.id);      
+    values.push(req.params.servico);  
 
     const query = `
-      UPDATE serviços SET 
-      ${setClauses.join(', ')}
-      WHERE id = $${values.length - 1} AND serviço = $${values.length}
+      UPDATE serviços SET
+        ${setClauses.join(",\n")}
+      WHERE id_projeto = $${values.length - 1} AND "serviço" = $${values.length}
     `;
 
-    const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
-    res.send({ success: true, message: "Arquivos inseridos nas colunas corretamente!" });
+    res.send({ success: true, message: "Imagens atualizadas com sucesso!" });
 
   } catch (error) {
     client.release();
     res.status(500).send(error);
   }
 });
+
 
 fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     
