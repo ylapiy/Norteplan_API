@@ -4,6 +4,8 @@ const fastify = Fastify({
   logger: false,
 });
 
+
+fastify.register(require("@fastify/multipart"))
 fastify.register(require("@fastify/postgres"), {
   connectionString: "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
@@ -126,7 +128,6 @@ fastify.put("/projetos/:id", async (req, res) => {
 
 
 
-
 fastify.get("/getservicos", async (req, res) =>{
     
     try {
@@ -141,7 +142,7 @@ fastify.get("/getservicos", async (req, res) =>{
 
 
 
-})
+});
 
 fastify.post("/criaservico", async(req, res) =>{
 
@@ -179,7 +180,7 @@ fastify.post("/criaservico", async(req, res) =>{
 
 
 
-})
+});
 
 fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
     const id_projeto = req.params.id;
@@ -217,6 +218,48 @@ fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
 
 });
 
+fastify.put("/adicionarimagemservicos/:id/:servico", async(req, res) =>{
+    
+    try {
+
+    const buffers = [];
+
+    for await (const part of req.parts()) {
+      if (part.file) {
+        const buffer = await part.toBuffer();
+        buffers.push(buffer);
+      }
+    }
+
+    const placeholders = [];
+    const values = [id,servico];
+
+    for (let i = 0; i < 12; i++) {
+      placeholders.push(`$${i + 1}`);
+      values.push(buffers[i] || null); 
+    }
+
+    values.push(req.params.id);
+    values.push(req.params.servico);
+
+    const query = `
+      UPDATE serviços SET 
+      ${setClauses.join(', ')}
+      WHERE id = $${values.length - 1} AND serviço = $${values.length}
+    `;
+
+    const client = await fastify.pg.connect();
+    await client.query(query, values);
+    client.release();
+
+    res.send({ success: true, message: "Arquivos inseridos nas colunas corretamente!" });
+
+  } catch (error) {
+    client.release();
+    res.status(500).send(error);
+  }
+});
+
 fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     
     const id_projeto = req.params.id;
@@ -230,7 +273,7 @@ fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     ]
 
     try{
-        
+
     const client = await fastify.pg.connect(); 
     await client.query(query, values);
     client.release();
@@ -239,6 +282,19 @@ fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     } catch (error) {
     res.status(500).send(error);
     }
+
+
+
+});
+
+
+
+
+
+
+
+fastify.get("/login", async(req,res) =>{
+
 
 
 
