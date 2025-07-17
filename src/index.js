@@ -168,6 +168,7 @@ fastify.post("/criaservico", async(req, res) =>{
 
     try{
 
+    const client = await fastify.pg.connect(); 
     await client.query(query, values);
     client.release();
 
@@ -180,7 +181,7 @@ fastify.post("/criaservico", async(req, res) =>{
 
 })
 
-fastify.put("/servicos/:id/:servico", async(req, res) =>{
+fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
     const id_projeto = req.params.id;
     const servico  = req.params.servico;
 
@@ -205,6 +206,7 @@ fastify.put("/servicos/:id/:servico", async(req, res) =>{
 
     try{
 
+    const client = await fastify.pg.connect(); 
     await client.query(query, values);
     client.release();
 
@@ -215,9 +217,28 @@ fastify.put("/servicos/:id/:servico", async(req, res) =>{
 
 });
 
-fastify.delete("/servicos/:id/:servico", async(req, res) =>{
+fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
+    
+    const id_projeto = req.params.id;
+    const servico  = req.params.servico;
 
+    const query = `DELETE FROM serviços WHERE id_projeto = $1 AND serviço = $2`;
 
+    const values = [
+    id_projeto,
+    servico,
+    ]
+
+    try{
+        
+    const client = await fastify.pg.connect(); 
+    await client.query(query, values);
+    client.release();
+
+    res.send({ success: true, message: "Olha o banco" });
+    } catch (error) {
+    res.status(500).send(error);
+    }
 
 
 
