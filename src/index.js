@@ -16,6 +16,8 @@ fastify.register(require("@fastify/postgres"), {
   connectionString: "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
 
+
+
 fastify.get("/getprojetos", async (req, res) => {
   try {
     const client = await fastify.pg.connect(); 
@@ -27,7 +29,7 @@ fastify.get("/getprojetos", async (req, res) => {
   }
 });
 
-fastify.post("/criaprojeto", async (req, res) => {
+fastify.post("/criaprojetos", async (req, res) => {
   
     const {
       engenheiro,
@@ -78,7 +80,7 @@ fastify.post("/criaprojeto", async (req, res) => {
 fastify.put("/projetos/:id", async (req, res) => {
   const id = req.params.id;
 
-     const {
+    const {
     engenheiro,
     municipio,
     objeto,
@@ -132,6 +134,27 @@ fastify.put("/projetos/:id", async (req, res) => {
   }
 });
 
+fastify.delete("/excluirprojetos/:id", async (req, res) => {
+
+    const id = req.params.id;
+
+    try{
+
+    const client = await fastify.pg.connect(); 
+
+    await client.query("DELETE FROM serviços WHERE id_projeto = $1",[id]);
+    await client.query("DELETE FROM projetos WHERE id = $1",[id]);
+
+    client.release();
+
+    res.send({ success: true, message: "Olha o banco" });
+    } catch (error) {
+    res.status(500).send(error);
+    }
+
+});
+
+
 
 
 fastify.get("/getservicos", async (req, res) =>{
@@ -157,20 +180,22 @@ fastify.post("/criaservico", async(req, res) =>{
     servico,
     status,
     inicio,
-    fim
+    fim,
+    id_pasta
     } = req.body;
 
     const query = `
     INSERT INTO serviços (
-    id_projeto, serviço, status, inicio, fim
-    ) VALUES ($1, $2, $3, $4, $5)`;
+    id_projeto, serviço, status, inicio, fim, id_pasta
+    ) VALUES ($1, $2, $3, $4, $5, $6)`;
 
     const values = [
     id_projeto,
     servico,
     status,
     inicio,
-    fim
+    fim,
+    id_pasta
     ]
 
     try{
@@ -195,7 +220,7 @@ fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
    const {
     status,
     inicio,
-    fim
+    fim,
     } = req.body;
 
     const query = `
@@ -224,53 +249,6 @@ fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
 
 });
 
-fastify.put("/adicionarimagemservicos/:id/:servico", async (req, res) => {
-  const client = await fastify.pg.connect();
-
-  try {
-    const buffers = [];
-
-    for await (const part of req.parts()) {
-      if (part.file) {
-        const buffer = await part.toBuffer();
-        buffers.push(buffer);
-      }
-    }
-
-    const colunas = [
-      "imagem1", "imagem2", "imagem3", "imagem4", "imagem5",
-      "imagem6", "imagem7", "imagem8", "imagem9", "imagem10"
-    ];
-
-    const setClauses = [];
-    const values = [];
-
-    for (let i = 0; i < colunas.length; i++) {
-      setClauses.push(`${colunas[i]} = $${i + 1}`);
-      values.push(buffers[i] || null);
-    }
-
-    values.push(req.params.id);      
-    values.push(req.params.servico);  
-
-    const query = `
-      UPDATE serviços SET
-        ${setClauses.join(",\n")}
-      WHERE id_projeto = $${values.length - 1} AND "serviço" = $${values.length}
-    `;
-
-    await client.query(query, values);
-    client.release();
-
-    res.send({ success: true, message: "Imagens atualizadas com sucesso!" });
-
-  } catch (error) {
-    client.release();
-    res.status(500).send(error);
-  }
-});
-
-
 fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     
     const id_projeto = req.params.id;
@@ -294,15 +272,7 @@ fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
     res.status(500).send(error);
     }
 
-
-
 });
-
-
-
-
-
-
 
 fastify.get("/login", async(req,res) =>{
 
