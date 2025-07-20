@@ -20,6 +20,20 @@ fastify.get("/getprojetos", async (req, res) => {
   }
 });
 
+fastify.get("/getprojetos/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const client = await fastify.pg.connect();
+    const result = await client.query("SELECT * FROM projetos WHERE id = $1", [
+      id,
+    ]);
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 fastify.post("/criaprojetos", async (req, res) => {
   const {
     engenheiro,
@@ -141,6 +155,23 @@ fastify.get("/getservicos", async (req, res) => {
   try {
     const client = await fastify.pg.connect();
     const result = await client.query("SELECT * FROM serviços");
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+fastify.get("/getservicos/:id/:servico", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const servico = req.params.servico;
+
+    const client = await fastify.pg.connect();
+    const result = await client.query(
+      "SELECT * FROM serviços WHERE id_projeto = $1 AND serviço = $2",
+      [id, servico]
+    );
     client.release();
     res.send(result.rows);
   } catch (error) {
