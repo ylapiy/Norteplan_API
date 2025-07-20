@@ -5,60 +5,56 @@ const fastify = Fastify({
 });
 
 fastify.register(require("@fastify/postgres"), {
-  connectionString: "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
+  connectionString:
+    "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
-
-
 
 fastify.get("/getprojetos", async (req, res) => {
   try {
-    const client = await fastify.pg.connect(); 
+    const client = await fastify.pg.connect();
     const result = await client.query("SELECT * FROM projetos");
     client.release();
-    res.send(result.rows); 
+    res.send(result.rows);
   } catch (error) {
     res.status(500).send(error);
   }
 });
 
 fastify.post("/criaprojetos", async (req, res) => {
-  
-    const {
-      engenheiro,
-      municipio,
-      objeto,
-      prioridade,
-      inicio,
-      fim,
-      financiamento,
-      vencimento_convenio,
-      clasula_suspensiva,
-      observações,
-    } = req.body;
+  const {
+    engenheiro,
+    municipio,
+    objeto,
+    prioridade,
+    inicio,
+    fim,
+    financiamento,
+    vencimento_convenio,
+    clasula_suspensiva,
+    observações,
+  } = req.body;
 
-    const query = `
+  const query = `
       INSERT INTO projetos (
         engenheiro, municipio, objeto, prioridade, inicio, fim,
         financiamento, vencimento_convenio, clasula_suspensiva, observações
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 
-    const values = [
-      engenheiro,
-      municipio,
-      objeto,
-      prioridade,
-      inicio,
-      fim,
-      financiamento,
-      vencimento_convenio,
-      clasula_suspensiva,
-      observações
-    ];
-  
-  
-    try {
+  const values = [
+    engenheiro,
+    municipio,
+    objeto,
+    prioridade,
+    inicio,
+    fim,
+    financiamento,
+    vencimento_convenio,
+    clasula_suspensiva,
+    observações,
+  ];
 
+  try {
     const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
@@ -72,7 +68,7 @@ fastify.post("/criaprojetos", async (req, res) => {
 fastify.put("/projetos/:id", async (req, res) => {
   const id = req.params.id;
 
-    const {
+  const {
     engenheiro,
     municipio,
     objeto,
@@ -82,10 +78,10 @@ fastify.put("/projetos/:id", async (req, res) => {
     financiamento,
     vencimento_convenio,
     clasula_suspensiva,
-    observações
-    } = req.body;
+    observações,
+  } = req.body;
 
-    const query = `
+  const query = `
       UPDATE projetos SET 
         engenheiro = $2, 
         municipio = $3, 
@@ -99,182 +95,128 @@ fastify.put("/projetos/:id", async (req, res) => {
         observações = $11
       WHERE id = $1`;
 
-    const values = [
-      id,
-      engenheiro,
-      municipio,
-      objeto,
-      prioridade,
-      inicio,
-      fim,
-      financiamento,
-      vencimento_convenio,
-      clasula_suspensiva,
-      observações
-    ];
+  const values = [
+    id,
+    engenheiro,
+    municipio,
+    objeto,
+    prioridade,
+    inicio,
+    fim,
+    financiamento,
+    vencimento_convenio,
+    clasula_suspensiva,
+    observações,
+  ];
 
   try {
-    
     const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
     res.send({ success: true, message: "Projeto atualizado com sucesso!" });
-
   } catch (error) {
     res.status(500).send(error);
   }
 });
 
 fastify.delete("/excluirprojetos/:id", async (req, res) => {
+  const id = req.params.id;
 
-    const id = req.params.id;
+  try {
+    const client = await fastify.pg.connect();
 
-    try{
-
-    const client = await fastify.pg.connect(); 
-
-    await client.query("DELETE FROM serviços WHERE id_projeto = $1",[id]);
-    await client.query("DELETE FROM projetos WHERE id = $1",[id]);
+    await client.query("DELETE FROM serviços WHERE id_projeto = $1", [id]);
+    await client.query("DELETE FROM projetos WHERE id = $1", [id]);
 
     client.release();
 
     res.send({ success: true, message: "Olha o banco" });
-    } catch (error) {
-    res.status(500).send(error);
-    }
-
-});
-
-
-
-fastify.get("/getservicos", async (req, res) =>{
-    
-    try {
-    const client = await fastify.pg.connect(); 
-    const result = await client.query("SELECT * FROM serviços");
-    client.release();
-    res.send(result.rows); 
-
   } catch (error) {
     res.status(500).send(error);
   }
-
-
-
 });
 
-fastify.post("/criaservico", async(req, res) =>{
+fastify.get("/getservicos", async (req, res) => {
+  try {
+    const client = await fastify.pg.connect();
+    const result = await client.query("SELECT * FROM serviços");
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
-    const {
-    id_projeto,
-    servico,
-    status,
-    inicio,
-    fim,
-    id_pasta
-    } = req.body;
+fastify.post("/criaservico", async (req, res) => {
+  const { id_projeto, servico, status, inicio, fim, id_pasta } = req.body;
 
-    const query = `
+  const query = `
     INSERT INTO serviços (
     id_projeto, serviço, status, inicio, fim, id_pasta
     ) VALUES ($1, $2, $3, $4, $5, $6)`;
 
-    const values = [
-    id_projeto,
-    servico,
-    status,
-    inicio,
-    fim,
-    id_pasta
-    ]
+  const values = [id_projeto, servico, status, inicio, fim, id_pasta];
 
-    try{
-
-    const client = await fastify.pg.connect(); 
+  try {
+    const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
     res.send({ success: true, message: "Olha o banco" });
-    } catch (error) {
+  } catch (error) {
     res.status(500).send(error);
-    }
-
-
-
+  }
 });
 
-fastify.put("/editarservicos/:id/:servico", async(req, res) =>{
-    const id_projeto = req.params.id;
-    const servico  = req.params.servico;
+fastify.put("/editarservicos/:id/:servico", async (req, res) => {
+  const id_projeto = req.params.id;
+  const servico = req.params.servico;
 
-   const {
-    status,
-    inicio,
-    fim,
-    } = req.body;
+  const { status, inicio, fim } = req.body;
 
-    const query = `
+  const query = `
     UPDATE serviços 
     id_projeto, serviço, status, inicio, fim
     WHERE id = $1 AND serviço = $2`;
 
-    const values = [
-    id_projeto,
-    servico,
-    status,
-    inicio,
-    fim
-    ]
+  const values = [id_projeto, servico, status, inicio, fim];
 
-    try{
-
-    const client = await fastify.pg.connect(); 
+  try {
+    const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
     res.send({ success: true, message: "Olha o banco" });
-    } catch (error) {
+  } catch (error) {
     res.status(500).send(error);
-    }
-
+  }
 });
 
-fastify.delete("/excluirservicos/:id/:servico", async(req, res) =>{
-    
-    const id_projeto = req.params.id;
-    const servico  = req.params.servico;
+fastify.delete("/excluirservicos/:id/:servico", async (req, res) => {
+  const id_projeto = req.params.id;
+  const servico = req.params.servico;
 
-    const query = `DELETE FROM serviços WHERE id_projeto = $1 AND serviço = $2`;
+  const query = `DELETE FROM serviços WHERE id_projeto = $1 AND serviço = $2`;
 
-    const values = [
-    id_projeto,
-    servico,
-    ]
+  const values = [id_projeto, servico];
 
-    try{
-
-    const client = await fastify.pg.connect(); 
+  try {
+    const client = await fastify.pg.connect();
     await client.query(query, values);
     client.release();
 
     res.send({ success: true, message: "Olha o banco" });
-    } catch (error) {
+  } catch (error) {
     res.status(500).send(error);
-    }
-
+  }
 });
-
-
-
 
 fastify.listen({ port: 3000 }, function (error, address) {
   if (error) {
-    console.log(error); 
+    console.log(error);
     process.exit(1);
   }
 
   console.log("Servidor rodando em:", address);
 });
-
-
