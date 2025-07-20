@@ -43,7 +43,7 @@ fastify.get("/oauth2callback", async (req, reply) => {
   reply.send("Autenticação concluída. Agora você pode fazer upload.");
 });
 
-async function uploadToDrive(filePath, fileName, mimeType) {
+async function uploadToDrive(filePath, fileName, mimeType, pasta_pai) {
   if (!authTokens) throw new Error("Usuário não autenticado.");
 
   oauth2Client.setCredentials(authTokens);
@@ -52,7 +52,7 @@ async function uploadToDrive(filePath, fileName, mimeType) {
   const res = await drive.files.create({
     requestBody: {
       name: fileName,
-      parents: ["1nZPC0oYrxAq0Ujrp2EKosNYd5BTbYUyx"],
+      parents: ["pasta_pai"],
     },
     media: {
       mimeType,
@@ -65,12 +65,13 @@ async function uploadToDrive(filePath, fileName, mimeType) {
   return res.data;
 }
 
-fastify.post("/upload", async function (req, reply) {
+fastify.post("/upload/:id", async function (req, reply) {
   if (!authTokens) {
     reply.code(401).send({ error: "Usuário ainda não autenticado." });
     return;
   }
 
+  const pasta_pai = req.params.id;
   const parts = req.parts();
   const tempDir = path.join(__dirname, "temp");
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
@@ -83,7 +84,7 @@ fastify.post("/upload", async function (req, reply) {
       await finished(ws);
 
       try {
-        await uploadToDrive(tempPath, part.filename, part.mimetype);
+        await uploadToDrive(tempPath, part.filename, part.mimetype, pasta_pai);
       } catch (err) {
         reply.code(500).send({
           error: "Erro ao enviar arquivo para o Drive",
@@ -108,7 +109,7 @@ async function CriaPasta(nome, pasta_pai) {
 
   const Pasta = await drive.files.create({
     requestBody: FoldData,
-    fields: "id, webViewLink",
+    fields: "id",
   });
 
   await drive.permissions.create({
@@ -119,7 +120,7 @@ async function CriaPasta(nome, pasta_pai) {
     },
   });
 
-  return Pasta.data.webViewLink;
+  return Pasta.data.id;
 }
 
 fastify.post("/criapasta/:nome/:pastaPaiID", async function (req, res) {
