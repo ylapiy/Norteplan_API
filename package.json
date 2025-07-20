@@ -10,9 +10,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fastify/cors": "^11.0.1",
     "@fastify/multipart": "^9.0.3",
     "@fastify/postgres": "^6.0.2",
     "fastify": "^5.4.0",
+    "googleapis": "^153.0.0",
+    "open": "^10.2.0",
     "pg": "^8.16.3"
   }
 }
