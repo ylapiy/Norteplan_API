@@ -243,6 +243,35 @@ fastify.delete("/excluirservicos/:id/:servico", async (req, res) => {
   }
 });
 
+fastify.post("/login", async (req, res) => {
+  const { email, senha } = req.body;
+
+  try {
+    const client = await fastify.pg.connect();
+    const respot = await client.query(
+      `SELECT CASE 
+      WHEN EXISTS (
+        SELECT 1 FROM login 
+        WHERE email = $1 AND senha = $2
+      )
+      THEN (
+        SELECT acesso 
+        FROM login 
+        WHERE email = $1 AND senha = $2
+        LIMIT 1
+      )
+      ELSE NULL
+    END AS acesso`,
+      [email, senha]
+    );
+
+    client.release();
+    res.send(respot.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 fastify.listen({ port: 3000 }, function (error, address) {
   if (error) {
     console.log(error);
