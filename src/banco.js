@@ -1,13 +1,4 @@
-const Fastify = require("fastify");
-
-const fastify = Fastify({
-  logger: false,
-});
-
-fastify.register(require("@fastify/postgres"), {
-  connectionString:
-    "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
-});
+const { fastify } = require("./plugins.js");
 
 fastify.get("/getprojetos", async (req, res) => {
   try {
@@ -265,7 +256,7 @@ fastify.put("/editarservicos/:id/:servico", async (req, res) => {
   const { status, inicio, fim } = req.body;
 
   const query = `
-    UPDATE serviços 
+    UPDATE serviços SET
     id_projeto, serviço, status, inicio, fim
     WHERE id = $1 AND serviço = $2`;
 
@@ -328,13 +319,4 @@ fastify.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).send(error);
   }
-});
-
-fastify.listen({ port: 3000 }, function (error, address) {
-  if (error) {
-    console.log(error);
-    process.exit(1);
-  }
-
-  console.log("Servidor rodando em:", address);
 });
