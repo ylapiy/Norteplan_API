@@ -12,11 +12,10 @@ fastify.register(require("@fastify/multipart"), {
 });
 
 fastify.register(require("@fastify/postgres"), {
-  connectionString:
-    "postgresql://neondb_owner:npg_oY2EBJrcb5AR@ep-billowing-recipe-ad8vh7sp-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
+  connectionString: process.env.DATABASE_URL,
 });
 
-const credentials = require("./client_secret_508528174189-upsji6h2eip0dv4uqej1da7119ks66kr.apps.googleusercontent.com.json");
+const credentials = require(process.env.GOOGLE_SERVICE_ACCOUNT);
 
 const CLIENT_ID = credentials.web.client_id;
 const CLIENT_SECRET = credentials.web.client_secret;
