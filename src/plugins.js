@@ -31,4 +31,5 @@ const oauth2Client = new google.auth.OAuth2(
 module.exports = {
   fastify,
   oauth2Client,
+  google,
 };

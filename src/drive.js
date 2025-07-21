@@ -1,10 +1,30 @@
-const { fastify, oauth2Client } = require("./plugins.js");
+const { fastify, oauth2Client, google } = require("./plugins.js");
 
 const fs = require("fs");
 const path = require("path");
 const { finished } = require("stream/promises");
 
 let authTokens = null;
+
+async function SalveToken(tokens) {
+  try {
+    const client = await fastify.pg.connect();
+    const { access_token, refresh_token, scope, token_type, expiry_date } =
+      tokens;
+
+    await client.query(
+      `
+      INSERT INTO tokens (access_token, refresh_token, scope, token_type, expiry_date)
+      VALUES ($1, $2, $3, $4, $5)
+      `,
+      [access_token, refresh_token, scope, token_type, expiry_date]
+    );
+
+    client.release();
+  } catch (error) {
+    console.error("Erro ao salvar token no banco:", error);
+  }
+}
 
 fastify.get("/", async (req, reply) => {
   const url = oauth2Client.generateAuthUrl({
@@ -19,6 +39,7 @@ fastify.get("/oauth2callback", async (req, reply) => {
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
   authTokens = tokens;
+  SalveToken(authTokens);
   reply.send("Autenticação concluída. Agora você pode fazer upload.");
 });
 
@@ -31,7 +52,7 @@ async function uploadToDrive(filePath, fileName, mimeType, pasta_pai) {
   const res = await drive.files.create({
     requestBody: {
       name: fileName,
-      parents: ["pasta_pai"],
+      parents: [pasta_pai],
     },
     media: {
       mimeType,
@@ -113,3 +134,24 @@ fastify.post("/criapasta/:nome/:id_pastapai", async function (req, res) {
     });
   }
 });
+
+async function carregaTokensDoBanco() {
+  const client = await fastify.pg.connect();
+  const result = await client.query("SELECT * FROM tokens LIMIT 1");
+  client.release();
+
+  if (result.rows.length > 0) {
+    const token = result.rows[0];
+    oauth2Client.setCredentials({
+      access_token: token.access_token,
+      refresh_token: token.refresh_token,
+      scope: token.scope,
+      token_type: token.token_type,
+      expiry_date: token.expiry_date,
+    });
+    authTokens = oauth2Client.credentials;
+    console.log("Tokens carregados do banco com sucesso.");
+  }
+}
+
+module.exports = { carregaTokensDoBanco };
