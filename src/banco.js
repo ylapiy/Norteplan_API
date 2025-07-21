@@ -34,6 +34,47 @@ fastify.get("/getprojetos/:id", async (req, res) => {
   }
 });
 
+fastify.get("/getprojetos/serv", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const client = await fastify.pg.connect();
+    const result = await client.query(`SELECT 
+  p.id AS projeto_id,
+  p.engenheiro,
+  p.municipio,
+  p.objeto,
+  p.prioridade,
+  p.inicio AS inicio_projeto,
+  p.fim AS fim_projeto,
+  p.financiamento,
+  p.vencimento_convenio,
+  p.clasula_suspensiva,
+  p.observações,
+  p.id_pastaPai,
+  json_agg(
+    json_build_object(
+      'id_pasta', s.id_pasta,
+      'serviço', s.serviço,
+      'status', s.status,
+      'inicio', s.inicio,
+      'fim', s.fim
+    )
+  ) AS servicos
+FROM 
+  projetos p
+LEFT JOIN 
+  serviços s ON s.id_projeto = p.id
+GROUP BY 
+  p.id
+ORDER BY 
+  p.id`);
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 fastify.post("/criaprojetos", async (req, res) => {
   const {
     engenheiro,
@@ -46,13 +87,14 @@ fastify.post("/criaprojetos", async (req, res) => {
     vencimento_convenio,
     clasula_suspensiva,
     observações,
+    id_pastapai,
   } = req.body;
 
   const query = `
       INSERT INTO projetos (
         engenheiro, municipio, objeto, prioridade, inicio, fim,
-        financiamento, vencimento_convenio, clasula_suspensiva, observações
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        financiamento, vencimento_convenio, clasula_suspensiva, observações, id_pastapai
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     `;
 
   const values = [
@@ -66,6 +108,7 @@ fastify.post("/criaprojetos", async (req, res) => {
     vencimento_convenio,
     clasula_suspensiva,
     observações,
+    id_pastapai,
   ];
 
   try {
@@ -171,6 +214,21 @@ fastify.get("/getservicos/:id/:servico", async (req, res) => {
     const result = await client.query(
       "SELECT * FROM serviços WHERE id_projeto = $1 AND serviço = $2",
       [id, servico]
+    );
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+fastify.get("/getservicos/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const client = await fastify.pg.connect();
+    const result = await client.query(
+      "SELECT * FROM serviços WHERE id_projeto = $1",
+      [id]
     );
     client.release();
     res.send(result.rows);
