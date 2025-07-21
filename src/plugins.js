@@ -15,7 +15,7 @@ fastify.register(require("@fastify/postgres"), {
   connectionString: process.env.DATABASE_URL,
 });
 
-const credentials = require(process.env.GOOGLE_SERVICE_ACCOUNT);
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
 const CLIENT_ID = credentials.web.client_id;
 const CLIENT_SECRET = credentials.web.client_secret;
