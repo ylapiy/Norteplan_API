@@ -116,6 +116,7 @@ fastify.get("/getprojetos/serv/:nome", async (req, res) => {
 
 fastify.post("/criaprojetos", async (req, res) => {
   const {
+    id,
     engenheiro,
     municipio,
     objeto,
@@ -131,12 +132,13 @@ fastify.post("/criaprojetos", async (req, res) => {
 
   const query = `
       INSERT INTO projetos (
-        engenheiro, municipio, objeto, prioridade, inicio, fim,
+        id, engenheiro, municipio, objeto, prioridade, inicio, fim,
         financiamento, vencimento_convenio, clasula_suspensiva, observações, id_pastapai
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `;
 
   const values = [
+    id,
     engenheiro,
     municipio,
     objeto,
