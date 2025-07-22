@@ -66,6 +66,54 @@ ORDER BY
   }
 });
 
+fastify.get("/getprojetos/serv/:nome", async (req, res) => {
+  const nome = req.params.nome;
+
+  try {
+    const client = await fastify.pg.connect();
+    const result = await client.query(
+      `SELECT 
+        p.id AS projeto_id,
+        p.engenheiro,
+        p.municipio,
+        p.objeto,
+        p.prioridade,
+        p.inicio AS inicio_projeto,
+        p.fim AS fim_projeto,
+        p.financiamento,
+        p.vencimento_convenio,
+        p.clasula_suspensiva,
+        p.observações,
+        p.id_pastaPai,
+        json_agg(
+          json_build_object(
+            'id_pasta', s.id_pasta,
+            'serviço', s.serviço,
+            'status', s.status,
+            'inicio', s.inicio,
+            'fim', s.fim
+          )
+        ) FILTER (WHERE s.id_projeto IS NOT NULL) AS servicos
+      FROM 
+        projetos p
+      LEFT JOIN 
+        serviços s ON s.id_projeto = p.id
+      WHERE 
+        p.engenheiro = $1
+      GROUP BY 
+        p.id
+      ORDER BY 
+        p.id`,
+      [nome]
+    );
+
+    client.release();
+    res.send(result.rows);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 fastify.post("/criaprojetos", async (req, res) => {
   const {
     engenheiro,
@@ -298,19 +346,10 @@ fastify.post("/login", async (req, res) => {
   try {
     const client = await fastify.pg.connect();
     const respot = await client.query(
-      `SELECT CASE 
-      WHEN EXISTS (
-        SELECT 1 FROM login 
-        WHERE email = $1 AND senha = $2
-      )
-      THEN (
-        SELECT acesso 
-        FROM login 
-        WHERE email = $1 AND senha = $2
-        LIMIT 1
-      )
-      ELSE NULL
-    END AS acesso`,
+      `SELECT acesso, nome 
+       FROM login 
+       WHERE email = $1 AND senha = $2
+       LIMIT 1`,
       [email, senha]
     );
 
