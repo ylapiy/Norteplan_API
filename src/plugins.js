@@ -4,6 +4,10 @@ const fastify = Fastify({
   logger: false,
 });
 
+fastify.register(require("@fastify/cors"), {
+  origin: "http://localhost:5173",
+});
+
 fastify.register(require("@fastify/multipart"), {
   attachFieldsToBody: false,
   limits: {
