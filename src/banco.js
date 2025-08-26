@@ -38,8 +38,6 @@ fastify.get("/getprojetos/serv", async (req, res) => {
   p.inicio AS inicio_projeto,
   p.fim AS fim_projeto,
   p.financiamento,
-  p.vencimento_convenio,
-  p.clasula_suspensiva,
   p.observações,
   p.id_pastaPai,
   json_agg(
@@ -81,8 +79,6 @@ fastify.get("/getprojetos/serv/:nome", async (req, res) => {
         p.inicio AS inicio_projeto,
         p.fim AS fim_projeto,
         p.financiamento,
-        p.vencimento_convenio,
-        p.clasula_suspensiva,
         p.observações,
         p.id_pastaPai,
         json_agg(
@@ -124,8 +120,6 @@ fastify.post("/criaprojetos", async (req, res) => {
     inicio,
     fim,
     financiamento,
-    vencimento_convenio,
-    clasula_suspensiva,
     observações,
     id_pastapai,
   } = req.body;
@@ -133,7 +127,7 @@ fastify.post("/criaprojetos", async (req, res) => {
   const query = `
       INSERT INTO projetos (
         id, engenheiro, municipio, objeto, prioridade, inicio, fim,
-        financiamento, vencimento_convenio, clasula_suspensiva, observações, id_pastapai
+        financiamento,observações, id_pastapai
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `;
 
@@ -146,8 +140,6 @@ fastify.post("/criaprojetos", async (req, res) => {
     inicio,
     fim,
     financiamento,
-    vencimento_convenio,
-    clasula_suspensiva,
     observações,
     id_pastapai,
   ];
@@ -174,8 +166,6 @@ fastify.put("/projetos/:id", async (req, res) => {
     inicio,
     fim,
     financiamento,
-    vencimento_convenio,
-    clasula_suspensiva,
     observações,
   } = req.body;
 
@@ -188,8 +178,6 @@ fastify.put("/projetos/:id", async (req, res) => {
         inicio = $6, 
         fim = $7,
         financiamento = $8, 
-        vencimento_convenio = $9, 
-        clasula_suspensiva = $10,
         observações = $11
       WHERE id = $1`;
 
@@ -202,8 +190,6 @@ fastify.put("/projetos/:id", async (req, res) => {
     inicio,
     fim,
     financiamento,
-    vencimento_convenio,
-    clasula_suspensiva,
     observações,
   ];
 
