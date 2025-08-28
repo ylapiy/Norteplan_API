@@ -6,6 +6,7 @@ const fastify = Fastify({
 
 fastify.register(require("@fastify/cors"), {
   origin: ["http://localhost:5500", "http://127.0.0.1:5500"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
 
 fastify.register(require("@fastify/multipart"), {

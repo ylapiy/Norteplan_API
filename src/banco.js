@@ -128,7 +128,7 @@ fastify.post("/criaprojetos", async (req, res) => {
       INSERT INTO projetos (
         id, engenheiro, municipio, objeto, prioridade, inicio, fim,
         financiamento,observações, id_pastapai
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 
   const values = [
@@ -178,7 +178,7 @@ fastify.put("/projetos/:id", async (req, res) => {
         inicio = $6, 
         fim = $7,
         financiamento = $8, 
-        observações = $11
+        observações = $9
       WHERE id = $1`;
 
   const values = [
