@@ -21,6 +21,12 @@ fastify.register(require("@fastify/postgres"), {
     process.env.DATABASE_URL,
 });
 
+console.log("GOOGLE_CREDENTIALS_JSON:", process.env.GOOGLE_CREDENTIALS_JSON);
+
+if (!process.env.GOOGLE_CREDENTIALS_JSON) {
+  throw new Error("A variável GOOGLE_CREDENTIALS_JSON não está definida!");
+}
+
 const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
 
 const CLIENT_ID = credentials.web.client_id;
