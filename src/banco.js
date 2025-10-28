@@ -285,27 +285,34 @@ fastify.post("/criaservico", async (req, res) => {
   }
 });
 
+// Backend - Corrigir a rota de edição de serviços
 fastify.put("/editarservicos/:id/:servico", async (req, res) => {
   const id_projeto = req.params.id;
-  const servico = req.params.servico;
+  const servico = decodeURIComponent(req.params.servico); // Decodificar o nome do serviço
 
-  const { status, inicio, fim } = req.body;
+  const { status, inicio, fim, id_pasta } = req.body;
 
+  // CORREÇÃO: Query SQL correta
   const query = `
-    UPDATE serviços SET
-    id_projeto, serviço, status, inicio, fim
-    WHERE id = $1 AND serviço = $2`;
+    UPDATE serviços 
+    SET status = $1, inicio = $2, fim = $3, id_pasta = $4
+    WHERE id_projeto = $5 AND serviço = $6`;
 
-  const values = [id_projeto, servico, status, inicio, fim];
+  const values = [status, inicio, fim, id_pasta, id_projeto, servico];
 
   try {
     const client = await fastify.pg.connect();
-    await client.query(query, values);
+    const result = await client.query(query, values);
     client.release();
 
-    res.send({ success: true, message: "Olha o banco" });
+    if (result.rowCount === 0) {
+      return res.status(404).send({ success: false, message: "Serviço não encontrado" });
+    }
+
+    res.send({ success: true, message: "Serviço atualizado com sucesso" });
   } catch (error) {
-    res.status(500).send(error);
+    console.error("Erro ao atualizar serviço:", error);
+    res.status(500).send({ success: false, error: error.message });
   }
 });
 
