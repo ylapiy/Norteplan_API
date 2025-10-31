@@ -5,7 +5,7 @@ const fastify = Fastify({
 });
 
 fastify.register(require("@fastify/cors"), {
-  origin: ["https://engenharia-gray.vercel.app"],
+  origin: ["https://engenharia-gray.vercel.app","https://engenharia-a4nmcnlxu-talyson-machado-barros-projects.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
 
